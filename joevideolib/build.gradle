@@ -1,22 +1,14 @@
 apply plugin: 'com.android.library'
-apply plugin: 'com.github.dcendents.android-maven'
-group='com.github.yangjie10930'
 android {
-    compileSdkVersion 27
-    buildToolsVersion '27.0.3'
+    compileSdk 31
 
     defaultConfig {
-        minSdkVersion 16
-        targetSdkVersion 27
+        minSdkVersion 21
+        targetSdkVersion 31
         versionCode 1
         versionName "1.1"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-
-        ndk {
-            abiFilters "armeabi-v7a", "arm64-v8a", "x86_64"
-        }
-
     }
     buildTypes {
         release {
@@ -24,15 +16,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    sourceSets {
-        main {
-            jniLibs.srcDirs = ['libs']
-
-        }
-    }
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    api 'com.android.support:support-annotations:25.1.1'
+    api 'com.arthenica:ffmpeg-kit-video:4.5.1.LTS'
+
 }

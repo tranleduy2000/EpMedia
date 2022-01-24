@@ -2,9 +2,10 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/EpMedia.iml" filepath="$PROJECT_DIR$/EpMedia.iml" />
-      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/joevideolib/joevideolib.iml" filepath="$PROJECT_DIR$/joevideolib/joevideolib.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/EpMedia2.iml" filepath="$PROJECT_DIR$/.idea/modules/EpMedia2.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/app/EpMedia2.app.iml" filepath="$PROJECT_DIR$/.idea/modules/app/EpMedia2.app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/demo/EpMedia2.demo.iml" filepath="$PROJECT_DIR$/.idea/modules/demo/EpMedia2.demo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/joevideolib/EpMedia2.joevideolib.iml" filepath="$PROJECT_DIR$/.idea/modules/joevideolib/EpMedia2.joevideolib.iml" />
     </modules>
   </component>
 </project>
