@@ -6,13 +6,8 @@ import android.media.MediaFormat;
 import android.util.Log;
 
 import com.arthenica.ffmpegkit.FFmpegKit;
-import com.arthenica.ffmpegkit.FFmpegSession;
-import com.arthenica.ffmpegkit.FFmpegSessionCompleteCallback;
-import com.arthenica.ffmpegkit.LogCallback;
 import com.arthenica.ffmpegkit.ReturnCode;
 import com.arthenica.ffmpegkit.SessionState;
-import com.arthenica.ffmpegkit.Statistics;
-import com.arthenica.ffmpegkit.StatisticsCallback;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,7 +30,7 @@ public class EpEditor {
     private static final int DEFAULT_HEIGHT = 360;//默认输出高度
 
     public enum Format {
-        MP3, MP4
+        MP3, MP4, WAV
     }
 
     public enum PTS {
@@ -349,6 +344,9 @@ public class EpEditor {
         switch (format) {
             case MP3:
                 cmd.append("-vn").append("-acodec").append("libmp3lame");
+                break;
+            case WAV:
+                cmd.append("-vn");
                 break;
             case MP4:
                 cmd.append("-vcodec").append("copy").append("-an");
