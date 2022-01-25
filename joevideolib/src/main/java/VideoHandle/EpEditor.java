@@ -140,7 +140,7 @@ public class EpEditor {
             duration = clipTime < duration ? clipTime : duration;
         }
         //执行命令
-        execCmd(cmd, duration, onEditorListener);
+        execCmd(cmd, onEditorListener);
     }
 
     /**
@@ -258,7 +258,7 @@ public class EpEditor {
                 }
             }
             //执行命令
-            execCmd(cmd, duration, onEditorListener);
+            execCmd(cmd, onEditorListener);
         } else {
             throw new RuntimeException("Need more than one video");
         }
@@ -295,7 +295,7 @@ public class EpEditor {
                 break;
             }
         }
-        execCmd(cmd, duration, onEditorListener);
+        execCmd(cmd, onEditorListener);
     }
 
     /**
@@ -332,7 +332,7 @@ public class EpEditor {
         cmd.append(output);
         mediaExtractor.release();
         long d = VideoUitls.getDuration(videoin);
-        execCmd(cmd, d, onEditorListener);
+        execCmd(cmd, onEditorListener);
     }
 
     /**
@@ -356,7 +356,7 @@ public class EpEditor {
         }
         cmd.append(out);
         long d = VideoUitls.getDuration(videoin);
-        execCmd(cmd, d, onEditorListener);
+        execCmd(cmd, onEditorListener);
     }
 
     /**
@@ -395,7 +395,7 @@ public class EpEditor {
         }
         cmd.append("-preset").append("superfast").append(out);
         long d = VideoUitls.getDuration(videoin);
-        execCmd(cmd, d, onEditorListener);
+        execCmd(cmd, onEditorListener);
     }
 
     /**
@@ -438,7 +438,7 @@ public class EpEditor {
         long d = VideoUitls.getDuration(videoin);
         double dd = d / times;
         long ddd = (long) dd;
-        execCmd(cmd, ddd, onEditorListener);
+        execCmd(cmd, onEditorListener);
     }
 
     /**
@@ -467,7 +467,7 @@ public class EpEditor {
                 .append("-r").append(rate).append("-s").append(w + "x" + h).append("-q:v").append(2)
                 .append("-f").append("image2").append("-preset").append("superfast").append(out);
         long d = VideoUitls.getDuration(videoin);
-        execCmd(cmd, d, onEditorListener);
+        execCmd(cmd, onEditorListener);
     }
 
     /**
@@ -501,7 +501,7 @@ public class EpEditor {
         }
         cmd.append(out);
         long d = VideoUitls.getDuration(videoin);
-        execCmd(cmd, d, onEditorListener);
+        execCmd(cmd, onEditorListener);
     }
 
 
@@ -611,39 +611,27 @@ public class EpEditor {
     public static void execCmd(String cmd, long duration, final OnEditorListener onEditorListener) {
         cmd = "ffmpeg " + cmd;
         String[] cmds = cmd.split(" ");
-        FFmpegKit.executeAsync(CmdUtils.join(cmds), new FFmpegSessionCompleteCallback() {
+        FFmpegKit.executeAsync(CmdUtils.join(cmds), session -> {
+            SessionState state = session.getState();
+            ReturnCode returnCode = session.getReturnCode();
 
-            @Override
-            public void apply(FFmpegSession session) {
-                SessionState state = session.getState();
-                ReturnCode returnCode = session.getReturnCode();
-
-                if (ReturnCode.isSuccess(returnCode)) {
-                    onEditorListener.onSuccess();
-                } else {
-                    onEditorListener.onFailure();
-                    ;
-                }
-                // CALLED WHEN SESSION IS EXECUTED
-
-                Log.d(TAG, String.format("FFmpeg process exited with state %s and rc %s.%s", state, returnCode, session.getFailStackTrace()));
+            if (ReturnCode.isSuccess(returnCode)) {
+                onEditorListener.onSuccess();
+            } else {
+                onEditorListener.onFailure();
+                ;
             }
-        }, new LogCallback() {
+            // CALLED WHEN SESSION IS EXECUTED
 
-            @Override
-            public void apply(com.arthenica.ffmpegkit.Log log) {
+            Log.d(TAG, String.format("FFmpeg process exited with state %s and rc %s.%s", state, returnCode, session.getFailStackTrace()));
+        }, log -> {
 
-                // TODO : 				onEditorListener.onProgress(progress);
+            // TODO : 				onEditorListener.onProgress(progress);
 
-            }
-        }, new StatisticsCallback() {
+        }, statistics -> {
 
-            @Override
-            public void apply(Statistics statistics) {
+            // CALLED WHEN SESSION GENERATES STATISTICS
 
-                // CALLED WHEN SESSION GENERATES STATISTICS
-
-            }
         });
 
     }
@@ -652,43 +640,30 @@ public class EpEditor {
      * 开始处理
      *
      * @param cmd              命令
-     * @param duration         视频时长（单位微秒）
      * @param onEditorListener 回调接口
      */
-    private static void execCmd(CmdList cmd, long duration, final OnEditorListener onEditorListener) {
+    private static void execCmd(CmdList cmd, final OnEditorListener onEditorListener) {
         String[] cmds = cmd.toArray(new String[cmd.size()]);
-        FFmpegKit.executeAsync(CmdUtils.join(cmds), new FFmpegSessionCompleteCallback() {
+        FFmpegKit.executeAsync(CmdUtils.join(cmds), session -> {
+            SessionState state = session.getState();
+            ReturnCode returnCode = session.getReturnCode();
 
-            @Override
-            public void apply(FFmpegSession session) {
-                SessionState state = session.getState();
-                ReturnCode returnCode = session.getReturnCode();
-
-                if (ReturnCode.isSuccess(returnCode)) {
-                    onEditorListener.onSuccess();
-                } else {
-                    onEditorListener.onFailure();
-                }
-                // CALLED WHEN SESSION IS EXECUTED
-
-                Log.d(TAG, String.format("FFmpeg process exited with state %s and rc %s.%s", state, returnCode, session.getFailStackTrace()));
+            if (ReturnCode.isSuccess(returnCode)) {
+                onEditorListener.onSuccess();
+            } else {
+                onEditorListener.onFailure();
             }
-        }, new LogCallback() {
+            // CALLED WHEN SESSION IS EXECUTED
 
-            @Override
-            public void apply(com.arthenica.ffmpegkit.Log log) {
-                Log.d(TAG, "apply() called with: log = [" + log + "]");
-                // TODO : 				onEditorListener.onProgress(progress);
+            Log.d(TAG, String.format("FFmpeg process exited with state %s and rc %s.%s", state, returnCode, session.getFailStackTrace()));
+        }, log -> {
+            Log.d(TAG, "apply() called with: log = [" + log + "]");
+            // TODO : 				onEditorListener.onProgress(progress);
 
-            }
-        }, new StatisticsCallback() {
+        }, statistics -> {
 
-            @Override
-            public void apply(Statistics statistics) {
+            // CALLED WHEN SESSION GENERATES STATISTICS
 
-                // CALLED WHEN SESSION GENERATES STATISTICS
-
-            }
         });
     }
 }
