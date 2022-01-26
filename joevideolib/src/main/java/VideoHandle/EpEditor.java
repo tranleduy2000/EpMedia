@@ -32,7 +32,7 @@ public class EpEditor {
     private static final int DEFAULT_HEIGHT = 360;//默认输出高度
 
     public enum Format {
-        MP3, MP4, WAV
+        MP3, MP4, WAV, AAC;
     }
 
     public enum PTS {
@@ -278,37 +278,41 @@ public class EpEditor {
     /**
      * 添加背景音乐
      *
-     * @param videoin          视频文件
-     * @param audioin          音频文件
-     * @param output           输出路径
+     * @param inputVideo       视频文件
+     * @param inputAudio       音频文件
+     * @param outputFile       输出路径
      * @param videoVolume      视频原声音音量(例:0.7为70%)
      * @param audioVolume      背景音乐音量(例:1.5为150%)
      * @param onEditorListener 回调监听
      */
-    public static void music(String videoin, String audioin, String output, float videoVolume, float audioVolume, OnEditorListener onEditorListener) {
+    public static void music(String inputVideo, String inputAudio, String outputFile, float videoVolume, float audioVolume, OnEditorListener onEditorListener) {
         MediaExtractor mediaExtractor = new MediaExtractor();
         try {
-            mediaExtractor.setDataSource(videoin);
+            mediaExtractor.setDataSource(inputVideo);
         } catch (IOException e) {
+            onEditorListener.onFailure();
             e.printStackTrace();
             return;
         }
         int at = TrackUtils.selectAudioTrack(mediaExtractor);
         CmdList cmd = new CmdList();
-        cmd.append("ffmpeg").append("-y").append("-i").append(videoin);
+        cmd.append("ffmpeg").append("-y")
+                .append("-i").append(CmdUtils.quote(inputVideo));
         if (at == -1) {
             int vt = TrackUtils.selectVideoTrack(mediaExtractor);
-            float duration = (float) mediaExtractor.getTrackFormat(vt).getLong(MediaFormat.KEY_DURATION) / 1000 / 1000;
-            cmd.append("-ss").append("0").append("-t").append(duration).append("-i").append(audioin).append("-acodec").append("copy").append("-vcodec").append("copy");
+            float duration = (float) mediaExtractor.getTrackFormat(vt).getLong(MediaFormat.KEY_DURATION) / 1000f / 1000f;
+            cmd.append("-ss").append("0").append("-t").append(duration)
+                    .append("-i").append(CmdUtils.quote(inputAudio))
+                    .append("-acodec").append("copy")
+                    .append("-vcodec").append("copy");
         } else {
-            cmd.append("-i").append(audioin).append("-filter_complex")
+            cmd.append("-i").append(CmdUtils.quote(inputAudio)).append("-filter_complex")
                     .append("[0:a]aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,volume=" + videoVolume + "[a0];[1:a]aformat=sample_fmts=fltp:sample_rates=44100:channel_layouts=stereo,volume=" + audioVolume + "[a1];[a0][a1]amix=inputs=2:duration=first[aout]")
                     .append("-map").append("[aout]").append("-ac").append("2").append("-c:v")
                     .append("copy").append("-map").append("0:v:0");
         }
-        cmd.append(output);
+        cmd.append(CmdUtils.quote(outputFile));
         mediaExtractor.release();
-        long d = VideoUitls.getDuration(videoin);
         execCmd(cmd, onEditorListener);
     }
 
@@ -321,14 +325,31 @@ public class EpEditor {
      * @param onEditorListener 回调监听
      */
     public static void demuxer(String inputFile, String outFile, Format format, OnEditorListener onEditorListener) {
+        // https://superuser.com/questions/609740/extracting-wav-from-mp4-while-preserving-the-highest-possible-quality
         CmdList cmd = new CmdList();
-        cmd.append("ffmpeg").append("-y").append("-i").append(CmdUtils.quote(inputFile));
+        cmd.append("ffmpeg").append("-y")
+                .append("-i").append(CmdUtils.quote(inputFile));
         switch (format) {
             case MP3:
-                cmd.append("-vn").append("-acodec").append("libmp3lame");
+                // To remove the video
+                cmd.append("-vn");
+                // Other -acodec options are mp3 flac m4a
+                cmd.append("-acodec").append("libmp3lame");
+                cmd.append("-async").append("1");
+                break;
+            case AAC:
+                // To remove the video
+                cmd.append("-vn");
+                // Other -acodec options are mp3 flac m4a
+                cmd.append("-c:a aac");
+                cmd.append("-async").append("1");
                 break;
             case WAV:
+                // To remove the video
                 cmd.append("-vn");
+                // Other -acodec options are mp3 flac m4a
+                cmd.append("-acodec").append("pcm_s16le");
+                cmd.append("-async").append("1");
                 break;
             case MP4:
                 cmd.append("-vcodec").append("copy").append("-an");
@@ -379,20 +400,20 @@ public class EpEditor {
     /**
      * 音视频变速
      *
-     * @param videoin          音视频文件
-     * @param out              输出路径
+     * @param inputFile        音视频文件
+     * @param outputFile       输出路径
      * @param times            倍率（调整范围0.25-4）
      * @param pts              加速类型
      * @param onEditorListener 回调接口
      */
-    public static void changePTS(String videoin, String out, float times, PTS pts, OnEditorListener onEditorListener) {
+    public static void changePTS(String inputFile, String outputFile, float times, PTS pts, OnEditorListener onEditorListener) {
         if (times < 0.25f || times > 4.0f) {
             Log.e("ffmpeg", "times can only be 0.25 to 4");
             onEditorListener.onFailure();
             return;
         }
         CmdList cmd = new CmdList();
-        cmd.append("ffmpeg").append("-y").append("-i").append(videoin);
+        cmd.append("ffmpeg").append("-y").append("-i").append(CmdUtils.quote(inputFile));
         String t = "atempo=" + times;
         if (times < 0.5f) {
             t = "atempo=0.5,atempo=" + (times / 0.5f);
@@ -412,10 +433,8 @@ public class EpEditor {
                         .append("-map").append("[v]").append("-map").append("[a]");
                 break;
         }
-        cmd.append("-preset").append("superfast").append(out);
-        long d = VideoUitls.getDuration(videoin);
-        double dd = d / times;
-        long ddd = (long) dd;
+        // TODO fix cmd.append("-preset").append("superfast");
+        cmd.append(CmdUtils.quote(outputFile));
         execCmd(cmd, onEditorListener);
     }
 
@@ -583,41 +602,6 @@ public class EpEditor {
      * 开始处理
      *
      * @param cmd              命令
-     * @param duration         视频时长（单位微秒）
-     * @param onEditorListener 回调接口
-     */
-    public static void execCmd(String cmd, long duration, final OnEditorListener onEditorListener) {
-        cmd = "ffmpeg " + cmd;
-        String[] cmds = cmd.split(" ");
-        FFmpegKit.executeAsync(CmdUtils.join(cmds), session -> {
-            SessionState state = session.getState();
-            ReturnCode returnCode = session.getReturnCode();
-
-            if (ReturnCode.isSuccess(returnCode)) {
-                onEditorListener.onSuccess();
-            } else {
-                onEditorListener.onFailure();
-                ;
-            }
-            // CALLED WHEN SESSION IS EXECUTED
-
-            // Log.d(TAG, String.format("FFmpeg process exited with state %s and rc %s.%s", state, returnCode, session.getFailStackTrace()));
-        }, log -> {
-
-            // TODO : 				onEditorListener.onProgress(progress);
-
-        }, statistics -> {
-
-            // CALLED WHEN SESSION GENERATES STATISTICS
-
-        });
-
-    }
-
-    /**
-     * 开始处理
-     *
-     * @param cmd              命令
      * @param onEditorListener 回调接口
      */
     private static void execCmd(CmdList cmd, final OnEditorListener onEditorListener) {
@@ -629,6 +613,12 @@ public class EpEditor {
         FFmpegKit.executeAsync(command, session -> {
             if (DEBUG) {
                 Log.d(TAG, "completeCallback " + session);
+                StringBuilder logs = new StringBuilder();
+                for (com.arthenica.ffmpegkit.Log x : session.getAllLogs()) {
+                    String s = x.getMessage();
+                    logs.append(s);
+                }
+                Log.d(TAG, logs.toString());
             }
             SessionState state = session.getState();
             ReturnCode returnCode = session.getReturnCode();
@@ -640,7 +630,7 @@ public class EpEditor {
             }
         }, log -> {
             if (DEBUG) {
-                Log.d(TAG, "apply() called with: log = [" + log + "]");
+                Log.d(TAG, log.getMessage());
             }
             // TODO : 				onEditorListener.onProgress(progress);
 
