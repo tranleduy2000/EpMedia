@@ -25,6 +25,8 @@ import utils.VideoUitls;
 
 public class EpEditor {
 
+    public static boolean DEBUG = false;
+
     private static final String TAG = "EpEditor";
     private static final int DEFAULT_WIDTH = 480;//默认输出宽度
     private static final int DEFAULT_HEIGHT = 360;//默认输出高度
@@ -56,7 +58,7 @@ public class EpEditor {
         if (epVideo.getVideoClip()) {
             cmd.append("-ss").append(epVideo.getClipStart()).append("-t").append(epVideo.getClipDuration()).append("-accurate_seek");
         }
-        cmd.append("-i").append(epVideo.getVideoPath());
+        cmd.append("-i").append(CmdUtils.quote(epVideo.getVideoPath()));
         //添加图片或者动图
         if (epDraws.size() > 0) {
             for (int i = 0; i < epDraws.size(); i++) {
@@ -129,12 +131,6 @@ public class EpEditor {
             cmd.append("superfast");
         }
         cmd.append(outputOption.outPath);
-        long duration = VideoUitls.getDuration(epVideo.getVideoPath());
-        if (epVideo.getVideoClip()) {
-            long clipTime = (long) ((epVideo.getClipDuration() - epVideo.getClipStart()) * 1000000);
-            duration = clipTime < duration ? clipTime : duration;
-        }
-        //执行命令
         execCmd(cmd, onEditorListener);
     }
 
@@ -176,7 +172,7 @@ public class EpEditor {
                 if (e.getVideoClip()) {
                     cmd.append("-ss").append(e.getClipStart()).append("-t").append(e.getClipDuration()).append("-accurate_seek");
                 }
-                cmd.append("-i").append(e.getVideoPath());
+                cmd.append("-i").append(CmdUtils.quote(e.getVideoPath()));
             }
             for (EpVideo e : epVideos) {
                 ArrayList<EpDraw> epDraws = e.getEpDraws();
@@ -239,20 +235,6 @@ public class EpEditor {
             }
             cmd.append(outputOption.getOutputInfo().split(" "));
             cmd.append("-preset").append("superfast").append(outputOption.outPath);
-            long duration = 0;
-            for (EpVideo ep : epVideos) {
-                long d = VideoUitls.getDuration(ep.getVideoPath());
-                if (ep.getVideoClip()) {
-                    long clipTime = (long) ((ep.getClipDuration() - ep.getClipStart()) * 1000000);
-                    d = clipTime < d ? clipTime : d;
-                }
-                if (d != 0) {
-                    duration += d;
-                } else {
-                    break;
-                }
-            }
-            //执行命令
             execCmd(cmd, onEditorListener);
         } else {
             throw new RuntimeException("Need more than one video");
@@ -280,7 +262,7 @@ public class EpEditor {
         CmdList cmd = new CmdList();
         cmd.append("ffmpeg").append("-y").append("-f").append("concat").append("-safe")
                 .append("0").append("-i").append(appDir + fileName)
-                .append("-c").append("copy").append(outputOption.outPath);
+                .append("-c").append("copy").append(CmdUtils.quote(outputOption.outPath));
         long duration = 0;
         for (EpVideo ep : epVideos) {
             long d = VideoUitls.getDuration(ep.getVideoPath());
@@ -333,14 +315,14 @@ public class EpEditor {
     /**
      * 音视频分离
      *
-     * @param videoin          视频文件
-     * @param out              输出文件路径
+     * @param inputFile        视频文件
+     * @param outFile          输出文件路径
      * @param format           输出类型
      * @param onEditorListener 回调监听
      */
-    public static void demuxer(String videoin, String out, Format format, OnEditorListener onEditorListener) {
+    public static void demuxer(String inputFile, String outFile, Format format, OnEditorListener onEditorListener) {
         CmdList cmd = new CmdList();
-        cmd.append("ffmpeg").append("-y").append("-i").append(videoin);
+        cmd.append("ffmpeg").append("-y").append("-i").append(CmdUtils.quote(inputFile));
         switch (format) {
             case MP3:
                 cmd.append("-vn").append("-acodec").append("libmp3lame");
@@ -352,28 +334,27 @@ public class EpEditor {
                 cmd.append("-vcodec").append("copy").append("-an");
                 break;
         }
-        cmd.append(out);
-        long d = VideoUitls.getDuration(videoin);
+        cmd.append(CmdUtils.quote(outFile));
         execCmd(cmd, onEditorListener);
     }
 
     /**
      * 音视频倒放
      *
-     * @param videoin          视频文件
-     * @param out              输出文件路径
+     * @param inputFile        视频文件
+     * @param outputFile       输出文件路径
      * @param vr               是否视频倒放
      * @param ar               是否音频倒放
      * @param onEditorListener 回调监听
      */
-    public static void reverse(String videoin, String out, boolean vr, boolean ar, OnEditorListener onEditorListener) {
+    public static void reverse(String inputFile, String outputFile, boolean vr, boolean ar, OnEditorListener onEditorListener) {
         if (!vr && !ar) {
             Log.e("ffmpeg", "parameter error");
             onEditorListener.onFailure();
             return;
         }
         CmdList cmd = new CmdList();
-        cmd.append("ffmpeg").append("-y").append("-i").append(videoin).append("-filter_complex");
+        cmd.append("ffmpeg").append("-y").append("-i").append(CmdUtils.quote(inputFile)).append("-filter_complex");
         String filter = "";
         if (vr) {
             filter += "[0:v]reverse[v];";
@@ -391,8 +372,7 @@ public class EpEditor {
         if (ar && !vr) {
             cmd.append("-acodec").append("libmp3lame");
         }
-        cmd.append("-preset").append("superfast").append(out);
-        long d = VideoUitls.getDuration(videoin);
+        cmd.append("-preset").append("superfast").append(CmdUtils.quote(outputFile));
         execCmd(cmd, onEditorListener);
     }
 
@@ -621,7 +601,7 @@ public class EpEditor {
             }
             // CALLED WHEN SESSION IS EXECUTED
 
-            Log.d(TAG, String.format("FFmpeg process exited with state %s and rc %s.%s", state, returnCode, session.getFailStackTrace()));
+            // Log.d(TAG, String.format("FFmpeg process exited with state %s and rc %s.%s", state, returnCode, session.getFailStackTrace()));
         }, log -> {
 
             // TODO : 				onEditorListener.onProgress(progress);
@@ -641,8 +621,15 @@ public class EpEditor {
      * @param onEditorListener 回调接口
      */
     private static void execCmd(CmdList cmd, final OnEditorListener onEditorListener) {
-        String[] cmds = cmd.toArray(new String[cmd.size()]);
-        FFmpegKit.executeAsync(CmdUtils.join(cmds), session -> {
+        String[] cmds = cmd.toArray(new String[0]);
+        String command = CmdUtils.join(cmds);
+        if (DEBUG) {
+            Log.d(TAG, "FFmpeg command: " + command);
+        }
+        FFmpegKit.executeAsync(command, session -> {
+            if (DEBUG) {
+                Log.d(TAG, "completeCallback " + session);
+            }
             SessionState state = session.getState();
             ReturnCode returnCode = session.getReturnCode();
 
@@ -651,16 +638,13 @@ public class EpEditor {
             } else {
                 onEditorListener.onFailure();
             }
-            // CALLED WHEN SESSION IS EXECUTED
-
-            Log.d(TAG, String.format("FFmpeg process exited with state %s and rc %s.%s", state, returnCode, session.getFailStackTrace()));
         }, log -> {
-            Log.d(TAG, "apply() called with: log = [" + log + "]");
+            if (DEBUG) {
+                Log.d(TAG, "apply() called with: log = [" + log + "]");
+            }
             // TODO : 				onEditorListener.onProgress(progress);
 
         }, statistics -> {
-
-            // CALLED WHEN SESSION GENERATES STATISTICS
 
         });
     }

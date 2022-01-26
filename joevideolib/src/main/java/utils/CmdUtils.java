@@ -12,4 +12,9 @@ public class CmdUtils {
         }
         return s.toString();
     }
+
+    public static String quote(String path) {
+        // replace " with \" add quote
+        return "\"" + path.replace("\"", "\\\"") + "\"";
+    }
 }
