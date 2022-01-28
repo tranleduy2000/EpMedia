@@ -8,6 +8,6 @@ public interface IConvertCallback {
 
     void onFailure(Exception error);
 
-    void onProgress(float progress, float max);
+    void onProgress(float progress);
 
 }

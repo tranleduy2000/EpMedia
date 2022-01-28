@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import ffmpeg.FfmpegLogParser;
 import utils.CmdUtils;
 import utils.FileUtils;
 import utils.TrackUtils;
@@ -632,7 +633,10 @@ public class EpEditor {
             if (DEBUG) {
                 Log.d(TAG, log.getMessage());
             }
-            // TODO : 				onEditorListener.onProgress(progress);
+            Long duration = FfmpegLogParser.parseTime(log.getMessage());
+            if (duration != null) {
+                onEditorListener.onProgress(duration);
+            }
 
         }, statistics -> {
 

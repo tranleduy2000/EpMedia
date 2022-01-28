@@ -15,6 +15,7 @@ import java.util.Arrays;
 
 import cafe.adriel.androidaudioconverter.callback.IConvertCallback;
 import cafe.adriel.androidaudioconverter.utils.StringUtils;
+import ffmpeg.FfmpegLogParser;
 
 public class AndroidAudioConverter {
     private static final String TAG = "AndroidAudioConverter";
@@ -84,6 +85,11 @@ public class AndroidAudioConverter {
                     }, (com.arthenica.ffmpegkit.Log log) -> {
                         Log.d(TAG, log.getMessage());
 
+                        String message = log.getMessage();
+                        Long duration = FfmpegLogParser.parseTime(message);
+                        if (duration != null) {
+                            callback.onProgress(duration);
+                        }
                     }, (Statistics statistics) -> {
 
                     });
