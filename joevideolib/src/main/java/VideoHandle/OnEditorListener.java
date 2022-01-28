@@ -12,5 +12,5 @@ public interface OnEditorListener {
 
 	void onFailure();
 
-	void onProgress(float progress);
+	void onProgress(float progress, float max);
 }
