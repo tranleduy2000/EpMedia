@@ -52,7 +52,6 @@ public class EpEditor {
         ArrayList<EpDraw> epDraws = epVideo.getEpDraws();
         //开始处理
         CmdList cmd = new CmdList();
-        cmd.append("ffmpeg");
         cmd.append("-y");
         if (epVideo.getVideoClip()) {
             cmd.append("-ss").append(epVideo.getClipStart()).append("-t").append(epVideo.getClipDuration()).append("-accurate_seek");
@@ -164,7 +163,6 @@ public class EpEditor {
         //判断数量
         if (epVideos.size() > 1) {
             CmdList cmd = new CmdList();
-            cmd.append("ffmpeg");
             cmd.append("-y");
             //添加输入标示
             for (EpVideo e : epVideos) {
@@ -259,7 +257,7 @@ public class EpEditor {
         }
         FileUtils.writeTxtToFile(videos, appDir, fileName);
         CmdList cmd = new CmdList();
-        cmd.append("ffmpeg").append("-y").append("-f").append("concat").append("-safe")
+        cmd.append("-y").append("-f").append("concat").append("-safe")
                 .append("0").append("-i").append(appDir + fileName)
                 .append("-c").append("copy").append(CmdUtils.quote(outputOption.outPath));
         long duration = 0;
@@ -295,7 +293,7 @@ public class EpEditor {
         }
         int at = TrackUtils.selectAudioTrack(mediaExtractor);
         CmdList cmd = new CmdList();
-        cmd.append("ffmpeg").append("-y")
+        cmd.append("-y")
                 .append("-i").append(CmdUtils.quote(inputVideo));
         if (at == -1) {
             int vt = TrackUtils.selectVideoTrack(mediaExtractor);
@@ -326,7 +324,7 @@ public class EpEditor {
     public static void demuxer(String inputFile, String outFile, Format format, OnFfmpegProcessCallback onEditorListener) {
         // https://superuser.com/questions/609740/extracting-wav-from-mp4-while-preserving-the-highest-possible-quality
         CmdList cmd = new CmdList();
-        cmd.append("ffmpeg").append("-y")
+        cmd.append("-y")
                 .append("-i").append(CmdUtils.quote(inputFile));
         switch (format) {
             case MP3:
@@ -374,7 +372,7 @@ public class EpEditor {
             return;
         }
         CmdList cmd = new CmdList();
-        cmd.append("ffmpeg").append("-y").append("-i").append(CmdUtils.quote(inputFile)).append("-filter_complex");
+        cmd.append("-y").append("-i").append(CmdUtils.quote(inputFile)).append("-filter_complex");
         String filter = "";
         if (vr) {
             filter += "[0:v]reverse[v];";
@@ -412,7 +410,7 @@ public class EpEditor {
             return;
         }
         CmdList cmd = new CmdList();
-        cmd.append("ffmpeg").append("-y").append("-i").append(CmdUtils.quote(inputFile));
+        cmd.append("-y").append("-i").append(CmdUtils.quote(inputFile));
         String t = "atempo=" + times;
         if (times < 0.5f) {
             t = "atempo=0.5,atempo=" + (times / 0.5f);
@@ -459,7 +457,7 @@ public class EpEditor {
             return;
         }
         CmdList cmd = new CmdList();
-        cmd.append("ffmpeg").append("-y").append("-i").append(videoin)
+        cmd.append("-y").append("-i").append(videoin)
                 .append("-r").append(rate).append("-s").append(w + "x" + h).append("-q:v").append(2)
                 .append("-f").append("image2").append("-preset").append("superfast").append(out);
         long d = VideoUitls.getDuration(videoin);
@@ -488,7 +486,7 @@ public class EpEditor {
             return;
         }
         CmdList cmd = new CmdList();
-        cmd.append("ffmpeg").append("-y").append("-f").append("image2").append("-i").append(videoin)
+        cmd.append("-y").append("-f").append("image2").append("-i").append(videoin)
                 .append("-vcodec").append("libx264")
                 .append("-r").append(rate);
 //				.append("-b").append("10M");

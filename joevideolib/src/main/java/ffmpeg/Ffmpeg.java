@@ -2,10 +2,10 @@ package ffmpeg;
 
 import android.util.Log;
 
-import com.arthenica.ffmpegkit.BuildConfig;
 import com.arthenica.ffmpegkit.FFmpegKit;
 import com.arthenica.ffmpegkit.ReturnCode;
 import com.arthenica.ffmpegkit.SessionState;
+import com.joe.joevideolib.BuildConfig;
 
 import VideoHandle.CmdList;
 import utils.CmdUtils;
