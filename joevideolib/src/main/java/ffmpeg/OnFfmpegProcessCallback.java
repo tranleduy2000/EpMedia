@@ -1,13 +1,9 @@
-package VideoHandle;
+package ffmpeg;
 
 /**
  * Created by YangJie on 2017/5/18.
  */
-
-/**
- * 执行完成/错误 时的回调接口
- */
-public interface OnEditorListener {
+public interface OnFfmpegProcessCallback {
 	void onSuccess();
 
 	void onFailure();

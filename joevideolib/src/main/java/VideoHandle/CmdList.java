@@ -1,6 +1,7 @@
 package VideoHandle;
 
 import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * Created by Yj on 2017/11/13.
@@ -8,6 +9,17 @@ import java.util.ArrayList;
  */
 
 public class CmdList extends ArrayList<String> {
+
+	public CmdList(int initialCapacity) {
+		super(initialCapacity);
+	}
+
+	public CmdList() {
+	}
+
+	public CmdList(Collection<? extends String> c) {
+		super(c);
+	}
 
 	public CmdList append(String s) {
 		this.add(s);

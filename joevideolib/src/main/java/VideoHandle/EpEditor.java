@@ -1,19 +1,17 @@
 package VideoHandle;
 
+import static ffmpeg.Ffmpeg.execCmd;
+
 import android.content.Context;
 import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.util.Log;
 
-import com.arthenica.ffmpegkit.FFmpegKit;
-import com.arthenica.ffmpegkit.ReturnCode;
-import com.arthenica.ffmpegkit.SessionState;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import ffmpeg.FfmpegLogParser;
+import ffmpeg.OnFfmpegProcessCallback;
 import utils.CmdUtils;
 import utils.FileUtils;
 import utils.TrackUtils;
@@ -49,7 +47,7 @@ public class EpEditor {
      * @param epVideo      需要处理的视频
      * @param outputOption 输出选项配置
      */
-    public static void exec(EpVideo epVideo, OutputOption outputOption, OnEditorListener onEditorListener) {
+    public static void exec(EpVideo epVideo, OutputOption outputOption, OnFfmpegProcessCallback onEditorListener) {
         boolean isFilter = false;
         ArrayList<EpDraw> epDraws = epVideo.getEpDraws();
         //开始处理
@@ -141,7 +139,7 @@ public class EpEditor {
      * @param epVideos     需要合并的视频集合
      * @param outputOption 输出选项配置
      */
-    public static void merge(List<EpVideo> epVideos, OutputOption outputOption, OnEditorListener onEditorListener) {
+    public static void merge(List<EpVideo> epVideos, OutputOption outputOption, OnFfmpegProcessCallback onEditorListener) {
         //检测是否有无音轨视频
         boolean isNoAudioTrack = false;
         for (EpVideo epVideo : epVideos) {
@@ -252,7 +250,7 @@ public class EpEditor {
      * @param outputOption     输出选项
      * @param onEditorListener 回调监听
      */
-    public static void mergeByLc(Context context, List<EpVideo> epVideos, OutputOption outputOption, final OnEditorListener onEditorListener) {
+    public static void mergeByLc(Context context, List<EpVideo> epVideos, OutputOption outputOption, final OnFfmpegProcessCallback onEditorListener) {
         String appDir = context.getCacheDir().getAbsolutePath() + "/EpVideos/";
         String fileName = "ffmpeg_concat.txt";
         List<String> videos = new ArrayList<>();
@@ -286,7 +284,7 @@ public class EpEditor {
      * @param audioVolume      背景音乐音量(例:1.5为150%)
      * @param onEditorListener 回调监听
      */
-    public static void music(String inputVideo, String inputAudio, String outputFile, float videoVolume, float audioVolume, OnEditorListener onEditorListener) {
+    public static void music(String inputVideo, String inputAudio, String outputFile, float videoVolume, float audioVolume, OnFfmpegProcessCallback onEditorListener) {
         MediaExtractor mediaExtractor = new MediaExtractor();
         try {
             mediaExtractor.setDataSource(inputVideo);
@@ -325,7 +323,7 @@ public class EpEditor {
      * @param format           输出类型
      * @param onEditorListener 回调监听
      */
-    public static void demuxer(String inputFile, String outFile, Format format, OnEditorListener onEditorListener) {
+    public static void demuxer(String inputFile, String outFile, Format format, OnFfmpegProcessCallback onEditorListener) {
         // https://superuser.com/questions/609740/extracting-wav-from-mp4-while-preserving-the-highest-possible-quality
         CmdList cmd = new CmdList();
         cmd.append("ffmpeg").append("-y")
@@ -369,7 +367,7 @@ public class EpEditor {
      * @param ar               是否音频倒放
      * @param onEditorListener 回调监听
      */
-    public static void reverse(String inputFile, String outputFile, boolean vr, boolean ar, OnEditorListener onEditorListener) {
+    public static void reverse(String inputFile, String outputFile, boolean vr, boolean ar, OnFfmpegProcessCallback onEditorListener) {
         if (!vr && !ar) {
             Log.e("ffmpeg", "parameter error");
             onEditorListener.onFailure();
@@ -407,7 +405,7 @@ public class EpEditor {
      * @param pts              加速类型
      * @param onEditorListener 回调接口
      */
-    public static void changePTS(String inputFile, String outputFile, float times, PTS pts, OnEditorListener onEditorListener) {
+    public static void changePTS(String inputFile, String outputFile, float times, PTS pts, OnFfmpegProcessCallback onEditorListener) {
         if (times < 0.25f || times > 4.0f) {
             Log.e("ffmpeg", "times can only be 0.25 to 4");
             onEditorListener.onFailure();
@@ -449,7 +447,7 @@ public class EpEditor {
      * @param rate             每秒视频生成图片数
      * @param onEditorListener 回调接口
      */
-    public static void video2pic(String videoin, String out, int w, int h, float rate, OnEditorListener onEditorListener) {
+    public static void video2pic(String videoin, String out, int w, int h, float rate, OnFfmpegProcessCallback onEditorListener) {
         if (w <= 0 || h <= 0) {
             Log.e("ffmpeg", "width and height must greater than 0");
             onEditorListener.onFailure();
@@ -478,7 +476,7 @@ public class EpEditor {
      * @param rate             输出视频帧率
      * @param onEditorListener 回调接口
      */
-    public static void pic2video(String videoin, String out, int w, int h, float rate, OnEditorListener onEditorListener) {
+    public static void pic2video(String videoin, String out, int w, int h, float rate, OnFfmpegProcessCallback onEditorListener) {
         if (w < 0 || h < 0) {
             Log.e("ffmpeg", "width and height must greater than 0");
             onEditorListener.onFailure();
@@ -599,47 +597,4 @@ public class EpEditor {
         }
     }
 
-    /**
-     * 开始处理
-     *
-     * @param cmd              命令
-     * @param onEditorListener 回调接口
-     */
-    private static void execCmd(CmdList cmd, final OnEditorListener onEditorListener) {
-        String[] cmds = cmd.toArray(new String[0]);
-        String command = CmdUtils.join(cmds);
-        if (DEBUG) {
-            Log.d(TAG, "FFmpeg command: " + command);
-        }
-        FFmpegKit.executeAsync(command, session -> {
-            if (DEBUG) {
-                Log.d(TAG, "completeCallback " + session);
-                StringBuilder logs = new StringBuilder();
-                for (com.arthenica.ffmpegkit.Log x : session.getAllLogs()) {
-                    String s = x.getMessage();
-                    logs.append(s);
-                }
-                Log.d(TAG, logs.toString());
-            }
-            SessionState state = session.getState();
-            ReturnCode returnCode = session.getReturnCode();
-
-            if (ReturnCode.isSuccess(returnCode)) {
-                onEditorListener.onSuccess();
-            } else {
-                onEditorListener.onFailure();
-            }
-        }, log -> {
-            if (DEBUG) {
-                Log.d(TAG, log.getMessage());
-            }
-            Long duration = FfmpegLogParser.parseTime(log.getMessage());
-            if (duration != null) {
-                onEditorListener.onProgress(duration);
-            }
-
-        }, statistics -> {
-
-        });
-    }
 }
