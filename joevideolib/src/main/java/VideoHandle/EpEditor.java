@@ -287,7 +287,7 @@ public class EpEditor {
         try {
             mediaExtractor.setDataSource(inputVideo);
         } catch (IOException e) {
-            onEditorListener.onFailure();
+            onEditorListener.onFailure(null);
             e.printStackTrace();
             return;
         }
@@ -368,7 +368,7 @@ public class EpEditor {
     public static void reverse(String inputFile, String outputFile, boolean vr, boolean ar, OnFfmpegProcessCallback onEditorListener) {
         if (!vr && !ar) {
             Log.e("ffmpeg", "parameter error");
-            onEditorListener.onFailure();
+            onEditorListener.onFailure(null);
             return;
         }
         CmdList cmd = new CmdList();
@@ -406,7 +406,7 @@ public class EpEditor {
     public static void changePTS(String inputFile, String outputFile, float times, PTS pts, OnFfmpegProcessCallback onEditorListener) {
         if (times < 0.25f || times > 4.0f) {
             Log.e("ffmpeg", "times can only be 0.25 to 4");
-            onEditorListener.onFailure();
+            onEditorListener.onFailure(null);
             return;
         }
         CmdList cmd = new CmdList();
@@ -448,12 +448,12 @@ public class EpEditor {
     public static void video2pic(String videoin, String out, int w, int h, float rate, OnFfmpegProcessCallback onEditorListener) {
         if (w <= 0 || h <= 0) {
             Log.e("ffmpeg", "width and height must greater than 0");
-            onEditorListener.onFailure();
+            onEditorListener.onFailure(null);
             return;
         }
         if (rate <= 0) {
             Log.e("ffmpeg", "rate must greater than 0");
-            onEditorListener.onFailure();
+            onEditorListener.onFailure(null);
             return;
         }
         CmdList cmd = new CmdList();
@@ -477,12 +477,12 @@ public class EpEditor {
     public static void pic2video(String videoin, String out, int w, int h, float rate, OnFfmpegProcessCallback onEditorListener) {
         if (w < 0 || h < 0) {
             Log.e("ffmpeg", "width and height must greater than 0");
-            onEditorListener.onFailure();
+            onEditorListener.onFailure(null);
             return;
         }
         if (rate <= 0) {
             Log.e("ffmpeg", "rate must greater than 0");
-            onEditorListener.onFailure();
+            onEditorListener.onFailure(null);
             return;
         }
         CmdList cmd = new CmdList();

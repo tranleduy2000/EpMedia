@@ -20,6 +20,5 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    api 'com.arthenica:ffmpeg-kit-video:4.5.1.LTS'
-
+    api 'com.arthenica:ffmpeg-kit-full:4.5.1.LTS'
 }

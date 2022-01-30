@@ -43,7 +43,7 @@ public class Ffmpeg {
             if (ReturnCode.isSuccess(returnCode)) {
                 onEditorListener.onSuccess();
             } else {
-                onEditorListener.onFailure();
+                onEditorListener.onFailure(null);
             }
         }, log -> {
             if (DEBUG) {

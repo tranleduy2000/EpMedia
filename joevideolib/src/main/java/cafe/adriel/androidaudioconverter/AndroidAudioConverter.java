@@ -13,16 +13,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import cafe.adriel.androidaudioconverter.callback.IConvertCallback;
 import cafe.adriel.androidaudioconverter.utils.StringUtils;
 import ffmpeg.FfmpegLogParser;
+import ffmpeg.OnFfmpegProcessCallback;
 
 public class AndroidAudioConverter {
     private static final String TAG = "AndroidAudioConverter";
 
     private File inputFile;
     private File outputFile;
-    private IConvertCallback callback;
+    private OnFfmpegProcessCallback callback;
     private String bitRate;
 
     private AndroidAudioConverter() {
@@ -37,7 +37,7 @@ public class AndroidAudioConverter {
         return this;
     }
 
-    public AndroidAudioConverter setCallback(IConvertCallback callback) {
+    public AndroidAudioConverter setCallback(OnFfmpegProcessCallback callback) {
         this.callback = callback;
         return this;
     }
@@ -76,7 +76,7 @@ public class AndroidAudioConverter {
                         Log.d(TAG, String.format("FFmpeg process exited with state %s and rc %s.%s", state, returnCode, session.getFailStackTrace()));
 
                         if (ReturnCode.isSuccess(returnCode)) {
-                            callback.onSuccess(outputFile);
+                            callback.onSuccess();
 
                         } else {
                             callback.onFailure(new Exception(session.getFailStackTrace()));

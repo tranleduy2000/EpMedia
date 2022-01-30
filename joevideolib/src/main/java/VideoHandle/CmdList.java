@@ -1,6 +1,7 @@
 package VideoHandle;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 
 /**
@@ -21,7 +22,11 @@ public class CmdList extends ArrayList<String> {
 		super(c);
 	}
 
-	public CmdList append(String s) {
+	public CmdList(String[] cmds) {
+		super(Arrays.asList(cmds));
+	}
+
+    public CmdList append(String s) {
 		this.add(s);
 		return this;
 	}
