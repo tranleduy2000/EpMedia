@@ -407,13 +407,6 @@ public class EpEditor {
             return;
         }
 
-        MediaInformationSession session = FFprobeKit.getMediaInformation(inputFile);
-        MediaInformation mediaInformation = session.getMediaInformation();
-        String bitRate = mediaInformation.getBitrate();
-
-        Log.d(TAG, "changeSpeed: " + mediaInformation);
-        Log.d(TAG, "changeSpeed: " + bitRate);
-
         CmdList cmd = new CmdList();
         cmd.append("-y") // force override ouput file
                 .append("-i").append(CmdUtils.quote(inputFile));
@@ -436,12 +429,12 @@ public class EpEditor {
                         .append("-map").append("[v]").append("-map").append("[a]");
                 break;
         }
-        if (bitRate != null && !bitRate.isEmpty()) {
-            // https://superuser.com/questions/1100073/increase-video-and-audio-playback-speed-without-losing-quality
-//            cmd.append("-b:v").append("1500k");
-        }
-        cmd.append("-crf 0");
+        // Keep video quality
+        // https://stackoverflow.com/questions/6503894/ffmpeg-convert-video-without-losing-resolution
+        cmd.append("-q").append("1");
+
         // TODO fix cmd.append("-preset").append("superfast");
+
         cmd.append(CmdUtils.quote(outputFile));
         execCmd(cmd, processCallback);
     }
