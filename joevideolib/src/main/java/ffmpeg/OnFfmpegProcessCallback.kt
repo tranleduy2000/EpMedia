@@ -1,12 +1,12 @@
-package ffmpeg;
+package ffmpeg
+
+import java.lang.Exception
 
 /**
  * Created by YangJie on 2017/5/18.
  */
-public interface OnFfmpegProcessCallback {
-	void onSuccess();
-
-	void onFailure(Exception e);
-
-	void onProgress(long duration);
+interface OnFfmpegProcessCallback {
+    fun onSuccess()
+    fun onFailure(error: Exception?)
+    fun onProgress(duration: Long)
 }
