@@ -7,6 +7,11 @@ import android.media.MediaExtractor;
 import android.media.MediaFormat;
 import android.util.Log;
 
+import com.arthenica.ffmpegkit.FFprobeKit;
+import com.arthenica.ffmpegkit.MediaInformation;
+import com.arthenica.ffmpegkit.MediaInformationSession;
+
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,7 +52,7 @@ public class EpEditor {
      * @param epVideo      需要处理的视频
      * @param outputOption 输出选项配置
      */
-    public static void exec(EpVideo epVideo, OutputOption outputOption, OnFfmpegProcessCallback onEditorListener) {
+    public static void exec(EpVideo epVideo, OutputOption outputOption, OnFfmpegProcessCallback processCallback) {
         boolean isFilter = false;
         ArrayList<EpDraw> epDraws = epVideo.getEpDraws();
         //开始处理
@@ -129,7 +134,7 @@ public class EpEditor {
             cmd.append("superfast");
         }
         cmd.append(outputOption.outPath);
-        execCmd(cmd, onEditorListener);
+        execCmd(cmd, processCallback);
     }
 
     /**
@@ -138,7 +143,7 @@ public class EpEditor {
      * @param epVideos     需要合并的视频集合
      * @param outputOption 输出选项配置
      */
-    public static void merge(List<EpVideo> epVideos, OutputOption outputOption, OnFfmpegProcessCallback onEditorListener) {
+    public static void merge(List<EpVideo> epVideos, OutputOption outputOption, OnFfmpegProcessCallback processCallback) {
         //检测是否有无音轨视频
         boolean isNoAudioTrack = false;
         for (EpVideo epVideo : epVideos) {
@@ -232,7 +237,7 @@ public class EpEditor {
             }
             cmd.append(outputOption.getOutputInfo().split(" "));
             cmd.append("-preset").append("superfast").append(outputOption.outPath);
-            execCmd(cmd, onEditorListener);
+            execCmd(cmd, processCallback);
         } else {
             throw new RuntimeException("Need more than one video");
         }
@@ -246,9 +251,9 @@ public class EpEditor {
      * @param context          Context
      * @param epVideos         需要合并的视频的集合
      * @param outputOption     输出选项
-     * @param onEditorListener 回调监听
+     * @param processCallback 回调监听
      */
-    public static void mergeByLc(Context context, List<EpVideo> epVideos, OutputOption outputOption, final OnFfmpegProcessCallback onEditorListener) {
+    public static void mergeByLc(Context context, List<EpVideo> epVideos, OutputOption outputOption, final OnFfmpegProcessCallback processCallback) {
         String appDir = context.getCacheDir().getAbsolutePath() + "/EpVideos/";
         String fileName = "ffmpeg_concat.txt";
         List<String> videos = new ArrayList<>();
@@ -269,7 +274,7 @@ public class EpEditor {
                 break;
             }
         }
-        execCmd(cmd, onEditorListener);
+        execCmd(cmd, processCallback);
     }
 
     /**
@@ -280,14 +285,14 @@ public class EpEditor {
      * @param outputFile       输出路径
      * @param videoVolume      视频原声音音量(例:0.7为70%)
      * @param audioVolume      背景音乐音量(例:1.5为150%)
-     * @param onEditorListener 回调监听
+     * @param processCallback 回调监听
      */
-    public static void music(String inputVideo, String inputAudio, String outputFile, float videoVolume, float audioVolume, OnFfmpegProcessCallback onEditorListener) {
+    public static void music(String inputVideo, String inputAudio, String outputFile, float videoVolume, float audioVolume, OnFfmpegProcessCallback processCallback) {
         MediaExtractor mediaExtractor = new MediaExtractor();
         try {
             mediaExtractor.setDataSource(inputVideo);
         } catch (IOException e) {
-            onEditorListener.onFailure(null);
+            processCallback.onFailure(null);
             e.printStackTrace();
             return;
         }
@@ -310,7 +315,7 @@ public class EpEditor {
         }
         cmd.append(CmdUtils.quote(outputFile));
         mediaExtractor.release();
-        execCmd(cmd, onEditorListener);
+        execCmd(cmd, processCallback);
     }
 
     /**
@@ -319,9 +324,9 @@ public class EpEditor {
      * @param inputFile        视频文件
      * @param outFile          输出文件路径
      * @param format           输出类型
-     * @param onEditorListener 回调监听
+     * @param processCallback 回调监听
      */
-    public static void demuxer(String inputFile, String outFile, Format format, OnFfmpegProcessCallback onEditorListener) {
+    public static void demuxer(String inputFile, String outFile, Format format, OnFfmpegProcessCallback processCallback) {
         // https://superuser.com/questions/609740/extracting-wav-from-mp4-while-preserving-the-highest-possible-quality
         CmdList cmd = new CmdList();
         cmd.append("-y")
@@ -353,7 +358,7 @@ public class EpEditor {
                 break;
         }
         cmd.append(CmdUtils.quote(outFile));
-        execCmd(cmd, onEditorListener);
+        execCmd(cmd, processCallback);
     }
 
     /**
@@ -363,12 +368,12 @@ public class EpEditor {
      * @param outputFile       输出文件路径
      * @param vr               是否视频倒放
      * @param ar               是否音频倒放
-     * @param onEditorListener 回调监听
+     * @param processCallback 回调监听
      */
-    public static void reverse(String inputFile, String outputFile, boolean vr, boolean ar, OnFfmpegProcessCallback onEditorListener) {
+    public static void reverse(String inputFile, String outputFile, boolean vr, boolean ar, OnFfmpegProcessCallback processCallback) {
         if (!vr && !ar) {
             Log.e("ffmpeg", "parameter error");
-            onEditorListener.onFailure(null);
+            processCallback.onFailure(null);
             return;
         }
         CmdList cmd = new CmdList();
@@ -391,26 +396,27 @@ public class EpEditor {
             cmd.append("-acodec").append("libmp3lame");
         }
         cmd.append("-preset").append("superfast").append(CmdUtils.quote(outputFile));
-        execCmd(cmd, onEditorListener);
+        execCmd(cmd, processCallback);
     }
 
-    /**
-     * 音视频变速
-     *
-     * @param inputFile        音视频文件
-     * @param outputFile       输出路径
-     * @param times            倍率（调整范围0.25-4）
-     * @param pts              加速类型
-     * @param onEditorListener 回调接口
-     */
-    public static void changePTS(String inputFile, String outputFile, float times, PTS pts, OnFfmpegProcessCallback onEditorListener) {
+    public static void changeSpeed(String inputFile, String outputFile, float times, PTS pts, OnFfmpegProcessCallback processCallback) throws IOException {
+        checkFileExist(inputFile);
         if (times < 0.25f || times > 4.0f) {
             Log.e("ffmpeg", "times can only be 0.25 to 4");
-            onEditorListener.onFailure(null);
+            processCallback.onFailure(null);
             return;
         }
+
+        MediaInformationSession session = FFprobeKit.getMediaInformation(inputFile);
+        MediaInformation mediaInformation = session.getMediaInformation();
+        String bitRate = mediaInformation.getBitrate();
+
+        Log.d(TAG, "changeSpeed: " + mediaInformation);
+        Log.d(TAG, "changeSpeed: " + bitRate);
+
         CmdList cmd = new CmdList();
-        cmd.append("-y").append("-i").append(CmdUtils.quote(inputFile));
+        cmd.append("-y") // force override ouput file
+                .append("-i").append(CmdUtils.quote(inputFile));
         String t = "atempo=" + times;
         if (times < 0.5f) {
             t = "atempo=0.5,atempo=" + (times / 0.5f);
@@ -430,9 +436,27 @@ public class EpEditor {
                         .append("-map").append("[v]").append("-map").append("[a]");
                 break;
         }
+        if (bitRate != null && !bitRate.isEmpty()) {
+            // https://superuser.com/questions/1100073/increase-video-and-audio-playback-speed-without-losing-quality
+//            cmd.append("-b:v").append("1500k");
+        }
+        cmd.append("-crf 0");
         // TODO fix cmd.append("-preset").append("superfast");
         cmd.append(CmdUtils.quote(outputFile));
-        execCmd(cmd, onEditorListener);
+        execCmd(cmd, processCallback);
+    }
+
+    private static void checkFileExist(String inputFile) throws IOException {
+        File file = new File(inputFile);
+        if (!file.exists()) {
+            throw new IOException("File not found " + inputFile);
+        }
+        if (!file.canRead()) {
+            throw new IOException("Cannot read file " + inputFile);
+        }
+        if (file.isDirectory()) {
+            throw new IOException("File is directory " + inputFile);
+        }
     }
 
     /**
@@ -443,17 +467,17 @@ public class EpEditor {
      * @param w                输出图片宽度
      * @param h                输出图片高度
      * @param rate             每秒视频生成图片数
-     * @param onEditorListener 回调接口
+     * @param processCallback 回调接口
      */
-    public static void video2pic(String videoin, String out, int w, int h, float rate, OnFfmpegProcessCallback onEditorListener) {
+    public static void video2pic(String videoin, String out, int w, int h, float rate, OnFfmpegProcessCallback processCallback) {
         if (w <= 0 || h <= 0) {
             Log.e("ffmpeg", "width and height must greater than 0");
-            onEditorListener.onFailure(null);
+            processCallback.onFailure(null);
             return;
         }
         if (rate <= 0) {
             Log.e("ffmpeg", "rate must greater than 0");
-            onEditorListener.onFailure(null);
+            processCallback.onFailure(null);
             return;
         }
         CmdList cmd = new CmdList();
@@ -461,7 +485,7 @@ public class EpEditor {
                 .append("-r").append(rate).append("-s").append(w + "x" + h).append("-q:v").append(2)
                 .append("-f").append("image2").append("-preset").append("superfast").append(out);
         long d = VideoUitls.getDuration(videoin);
-        execCmd(cmd, onEditorListener);
+        execCmd(cmd, processCallback);
     }
 
     /**
@@ -472,17 +496,17 @@ public class EpEditor {
      * @param w                输出视频宽度
      * @param h                输出视频高度
      * @param rate             输出视频帧率
-     * @param onEditorListener 回调接口
+     * @param processCallback 回调接口
      */
-    public static void pic2video(String videoin, String out, int w, int h, float rate, OnFfmpegProcessCallback onEditorListener) {
+    public static void pic2video(String videoin, String out, int w, int h, float rate, OnFfmpegProcessCallback processCallback) {
         if (w < 0 || h < 0) {
             Log.e("ffmpeg", "width and height must greater than 0");
-            onEditorListener.onFailure(null);
+            processCallback.onFailure(null);
             return;
         }
         if (rate <= 0) {
             Log.e("ffmpeg", "rate must greater than 0");
-            onEditorListener.onFailure(null);
+            processCallback.onFailure(null);
             return;
         }
         CmdList cmd = new CmdList();
@@ -495,7 +519,7 @@ public class EpEditor {
         }
         cmd.append(out);
         long d = VideoUitls.getDuration(videoin);
-        execCmd(cmd, onEditorListener);
+        execCmd(cmd, processCallback);
     }
 
 
