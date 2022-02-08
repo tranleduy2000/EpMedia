@@ -1,5 +1,7 @@
 package cafe.adriel.androidaudioconverter.model;
 
+import java.util.Locale;
+
 public enum AudioFormat {
     AAC,
     MP3,
@@ -9,6 +11,6 @@ public enum AudioFormat {
     FLAC;
 
     public String getFormat() {
-        return name().toLowerCase();
+        return name().toLowerCase(Locale.US);
     }
 }
