@@ -362,7 +362,7 @@ object EpEditor {
     fun demuxer(
         inputFile: String?,
         outFile: String?,
-        format: Format?,
+        format: Format,
         processCallback: OnFfmpegProcessCallback,
     ) {
         // https://superuser.com/questions/609740/extracting-wav-from-mp4-while-preserving-the-highest-possible-quality
@@ -392,6 +392,9 @@ object EpEditor {
                 cmd.append("-async").append("1")
             }
             Format.MP4 -> cmd.append("-vcodec").append("copy").append("-an")
+            else -> {
+
+            }
         }
         cmd.append(CmdUtils.quote(outFile))
         Ffmpeg.execCmd(cmd, processCallback)
@@ -446,7 +449,7 @@ object EpEditor {
         inputFile: String,
         outputFile: String?,
         times: Float,
-        pts: PTS?,
+        pts: PTS,
         processCallback: OnFfmpegProcessCallback,
     ) {
         checkFileExist(inputFile)
@@ -472,6 +475,9 @@ object EpEditor {
             PTS.ALL -> cmd.append("-filter_complex")
                 .append("[0:v]setpts=" + 1 / times + "*PTS[v];[0:a]" + t + "[a]")
                 .append("-map").append("[v]").append("-map").append("[a]")
+            else -> {
+
+            }
         }
         // Keep video quality
         // https://stackoverflow.com/questions/6503894/ffmpeg-convert-video-without-losing-resolution
