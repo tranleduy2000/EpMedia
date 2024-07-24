@@ -1,16 +1,26 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
+
 android {
-    compileSdk 33
+    compileSdk 34
+    namespace 'com.joe.joevideolib'
 
     defaultConfig {
         minSdkVersion 21
-        targetSdkVersion 33
-        versionCode 1
-        versionName "1.1"
+        targetSdk 34
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -22,6 +32,6 @@ android {
 dependencies {
     api fileTree(dir: 'libs', include: ['*.jar'])
     api 'com.arthenica:ffmpeg-kit-full:4.5.1.LTS'
-    api "androidx.core:core-ktx:1.9.0"
+    api "androidx.core:core-ktx:1.13.1"
     api "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
