@@ -2,12 +2,12 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdk 34
+    compileSdk 35
     namespace 'com.joe.joevideolib'
 
     defaultConfig {
-        minSdkVersion 21
-        targetSdk 34
+        minSdkVersion 24
+        targetSdk 35
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
@@ -23,7 +23,7 @@ android {
 
     buildTypes {
         debug {
-
+            minifyEnabled false
         }
         release {
             minifyEnabled false
@@ -34,7 +34,11 @@ android {
 
 dependencies {
     api fileTree(dir: 'libs', include: ['*.jar'])
-    api 'com.arthenica:ffmpeg-kit-full:4.5.1.LTS'
-    api "androidx.core:core-ktx:1.13.1"
+    // https://mvnrepository.com/artifact/com.arthenica/ffmpeg-kit-full
+    api project(':ffmpeg-kit-binary:ffmpeg-kit-full-6.0-2.LTS')
+    implementation files('../ffmpeg-kit-binary/smart-exception-java-0.2.1.jar')
+    implementation files('../ffmpeg-kit-binary/smart-exception-common-0.2.1.jar')
+
+    api "androidx.core:core-ktx:1.15.0"
     api "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }

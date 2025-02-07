@@ -169,4 +169,4 @@ fabric.properties
 
 # Android studio 3.1+ serialized cache file
 .idea/caches/build_file_checksums.ser
-
+!/ffmpeg-kit-binary/ffmpeg-kit-full-6.0-2.LTS/ffmpeg-kit-full-6.0-2.LTS.aar

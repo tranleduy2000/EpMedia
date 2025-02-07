@@ -1,7 +1,9 @@
 package com.example.demo;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
 import android.util.Log;
+import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -23,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        TextView textView =    findViewById(R.id.text_view);
         Log.d(TAG, "onCreate() called with: savedInstanceState = [" + savedInstanceState + "]");
         try {
             File inputFile = new File(getFilesDir(), "video.mp4");
@@ -36,9 +39,13 @@ public class MainActivity extends AppCompatActivity {
             EpEditor.OutputOption outputOption = new EpEditor.OutputOption(outputFile.getAbsolutePath());
             EpEditor.INSTANCE.exec(epVideo,
                     outputOption, new OnFfmpegProcessCallback() {
+                        @SuppressLint("SetTextI18n")
                         @Override
                         public void onProgress(long duration) {
                             Log.d(TAG, "onProgress() called with: progress = [" + duration + "]");
+                            runOnUiThread(() -> {
+                                textView.setText("Duration: " + duration);
+                            });
                         }
 
                         @Override
